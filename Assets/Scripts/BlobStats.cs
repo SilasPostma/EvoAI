@@ -1,4 +1,6 @@
 using UnityEngine;
+using System.Collections;
+using System.Collections.Generic;
 
 [System.Serializable]
 public class BlobStats
@@ -9,25 +11,28 @@ public class BlobStats
     public float stomachSize;
     public float turnSpeed;
     public float metabolism;
+    public List<string> heritage = new List<string> { "God" };
+    public string name;
 
-
-    public BlobStats Produce(int mutationRate, float mutationAmount)
+    public BlobStats Produce(float mutationRate, float mutationAmount)
     {
         BlobStats child = new BlobStats();
         child.speed = MutateValue(speed, mutationRate, mutationAmount);
-        child.metabolism = 1 / (5 - child.speed);
         child.senseRadius = MutateValue(senseRadius, mutationRate, mutationAmount);
-        child.size = MutateValue(size, mutationRate, mutationAmount);
+        child.size = Mathf.Min(MutateValue(size, mutationRate, mutationAmount), 2f);
         child.stomachSize = MutateValue(stomachSize, mutationRate, mutationAmount);
         child.turnSpeed = MutateValue(turnSpeed, mutationRate, mutationAmount);
+        child.metabolism = CalculateMetabolism();
+        child.heritage = new List<string>(heritage);
+        child.heritage.Add(name);
         return child;
     }
 
-    private float MutateValue(float value, int mr, float ma)
+    private float MutateValue(float value, float mr, float mp)
     {
-        if (mr >= Random.Range(0, 100))
+        if (Random.value < mr)
         {
-            return value + Random.Range(-ma, ma);
+            return Mathf.Max(0.1f, value * (1 + Random.Range(-mp, mp)));
         }
 
         else
@@ -35,4 +40,18 @@ public class BlobStats
             return value;
         }
     }
+
+    public float CalculateMetabolism()
+    {
+        float baseCost = 0.5f;
+        float sizeCost = Mathf.Pow(size, 0.75f) * 0.2f;
+        float speedCost = Mathf.Pow(speed, 1.5f) * 0.3f;
+        float senseCost = senseRadius * 0.05f;
+        float turnCost = turnSpeed * 0.1f;
+        float stomachCost = stomachSize * 0.05f;
+
+        float total = 0.15f * (baseCost + sizeCost + speedCost + senseCost + turnCost + stomachCost);
+        return Mathf.Max(0.1f, total);
+    }
+
 }

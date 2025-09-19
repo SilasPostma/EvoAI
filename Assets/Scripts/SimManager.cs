@@ -15,13 +15,13 @@ public class SimManager : MonoBehaviour
     public Transform blobFolder;
     public static SimManager Instance;
 
+    [SerializeField] private int foodAmount;
+    public int kidCost = 5;
 
+    public List<GameObject> allFood = new List<GameObject>();
+    public List<GameObject> allBlobs = new List<GameObject>();
 
-    [SerializeField]
-    private int foodAmount;
-    public List<GameObject> allFood;
     private float timer;
-    public List<BlobClass> blobs = new List<BlobClass>();
 
     void Awake()
     {
@@ -33,26 +33,30 @@ public class SimManager : MonoBehaviour
         StartGeneration();
     }
 
-    void StartGeneration()
-    {
-        allFood = SpawnFood(foodAmount);
-        SpawnBlobs(startPopulation, true);
-        timer = generationTimer;
-    }
-
     void Update()
     {
         timer -= Time.deltaTime;
-        if (timer <= 0)
+        if (timer <= 0 || allFood.Count == 0)
         {
             EndGeneration();
         }
     }
 
-    static void EndGeneration()
+    void StartGeneration()
     {
-        // List<BlobStats> survivors = CollectSurvivorStats();
-        // SpawnNextGeneration(survivors);
+        ClearAll();
+        allFood = SpawnFood(foodAmount);
+        allBlobs = SpawnBlobs(startPopulation);
+        timer = generationTimer;
+    }
+
+    void EndGeneration()
+    {
+        List<BlobStats> survivorStats = CollectSurvivorStats();
+        ClearAll();
+        allFood = SpawnFood(foodAmount);
+        allBlobs = SpawnBlobs(startPopulation, survivorStats);
+        timer = generationTimer;
     }
 
     List<GameObject> SpawnFood(int amount)
@@ -63,41 +67,99 @@ public class SimManager : MonoBehaviour
             float randX = Random.Range(-width, width);
             float randY = Random.Range(-height, height);
             GameObject food_instance = Instantiate(foodPrefab, new Vector2(randX, randY), Quaternion.identity, foodFolder);
-            food_instance.name = $"food_{i}";
+            food_instance.name = $"Food_{i}";
 
             FoodStats stats = food_instance.GetComponent<FoodStats>();
             if (stats != null)
             {
                 stats.nutrition = Random.Range(1f, foodNutritionMax);
-                Vector3 scale = food_instance.transform.localScale;
-                scale.x *= 2 * stats.nutrition;
-                scale.y *= 2 * stats.nutrition;
-                food_instance.transform.localScale = scale;
-                foods.Add(food_instance);
+                food_instance.transform.localScale *= stats.nutrition;
             }
+
+            foods.Add(food_instance);
         }
         return foods;
     }
 
-
-    void SpawnBlobs(int sp, bool firstGen)
+    List<GameObject> SpawnBlobs(int count, List<BlobStats> parents = null)
     {
-        for (int i = 0; i < sp; i++)
+        List<GameObject> blobs = new List<GameObject>();
+
+        if (parents != null && parents.Count > 0)
         {
-            float randX = Random.Range(-width, width);
-            float randY = Random.Range(-height, height);
-            GameObject blob_instance = Instantiate(blobPrefab, new Vector2(randX, randY), Quaternion.identity, blobFolder);
-            blob_instance.name = $"Blob_{i}";
-
-            BlobClass blobClass = blob_instance.GetComponent<BlobClass>();
-
-            if (firstGen)
+            for (int i = 0; i < parents.Count; i++)
             {
-                blobClass.stats = blobClass.stats.Produce(50, 0.5f);
-            }
+                float randX = Random.Range(-width, width);
+                float randY = Random.Range(-height, height);
+                Quaternion rotation = Quaternion.Euler(0, 0, Random.Range(0, 360));
 
-            if (blobClass != null)
-                blobs.Add(blobClass);
+                GameObject blob_instance = Instantiate(blobPrefab, new Vector2(randX, randY), rotation, blobFolder);
+                blob_instance.name = $"{parents[i].name}_{i}";
+
+
+                // set stats from parent + mutation
+                BlobClass blobClass = blob_instance.GetComponent<BlobClass>();
+                blobClass.stats = parents[i].Produce(0.2f, 0.2f);
+                blobClass.stats.name = blob_instance.name;
+
+                blob_instance.transform.localScale *= blobClass.stats.size;
+
+
+                blobs.Add(blob_instance);
+            }
         }
+        else
+        {
+            for (int i = 0; i < count; i++)
+            {
+                float randX = Random.Range(-width, width);
+                float randY = Random.Range(-height, height);
+                Quaternion rotation = Quaternion.Euler(0, 0, Random.Range(0, 360));
+
+                GameObject blob_instance = Instantiate(blobPrefab, new Vector2(randX, randY), rotation, blobFolder);
+                blob_instance.name = $"Blob_{i}";
+
+                BlobClass blobClass = blob_instance.GetComponent<BlobClass>();
+                blobClass.stats.name = blob_instance.name;
+
+                blob_instance.transform.localScale *= blobClass.stats.size;
+
+
+                blobs.Add(blob_instance);
+            }
+        }
+
+        return blobs;
+    }
+
+    List<BlobStats> CollectSurvivorStats()
+    {
+        List<BlobStats> survivorsStats = new List<BlobStats>();
+
+        foreach (GameObject blob in allBlobs)
+        {
+            BlobClass blobClass = blob.GetComponent<BlobClass>();
+            if (blobClass == null) continue;
+
+            int kidsCount = Mathf.FloorToInt(blobClass.energy / kidCost);
+
+            for (int k = 0; k < kidsCount; k++)
+            {
+                survivorsStats.Add(blobClass.stats);
+            }
+        }
+
+        return survivorsStats;
+    }
+
+    void ClearAll()
+    {
+        foreach (GameObject food in allFood)
+            Destroy(food);
+        allFood.Clear();
+
+        foreach (GameObject blob in allBlobs)
+            Destroy(blob);
+        allBlobs.Clear();
     }
 }

@@ -123,8 +123,11 @@ MonoBehaviour:
   stats:
     speed: 1.5
     senseRadius: 2
-    size: 0
+    size: 1
     stomachSize: 20
     turnSpeed: 1
     metabolism: 0
+    heritage:
+    - God
+    name: 
   energy: 10

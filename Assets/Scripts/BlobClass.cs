@@ -15,7 +15,7 @@ public class BlobClass : MonoBehaviour
     private void Start()
     {
         noiseOffset = Random.value * 100f;
-        stats.metabolism = 1 / (5 - stats.speed);
+        stats.metabolism = stats.CalculateMetabolism();
     }
 
     private void Update()
@@ -24,7 +24,6 @@ public class BlobClass : MonoBehaviour
         CheckAlive();
         HandleMovement();
         WrapPosition();
-        CheckFoodNearby();
     }
 
     #region Energy & Death
@@ -37,7 +36,7 @@ public class BlobClass : MonoBehaviour
     {
         if (energy <= 0)
         {
-            SimManager.Instance.blobs.Remove(this);
+            SimManager.Instance.allBlobs.Remove(gameObject);
             Destroy(gameObject);
         }
     }
@@ -66,10 +65,11 @@ public class BlobClass : MonoBehaviour
         foreach (GameObject food in SimManager.Instance.allFood)
         {
             float dist = Vector3.Distance(transform.position, food.transform.position);
+            FoodStats foodStats = food.GetComponent<FoodStats>();
 
-            if (dist < 0.5f)
+            float eatDist = dist - foodStats.nutrition * 0.075f;
+            if (eatDist < stats.size / 2f)
             {
-                FoodStats foodStats = food.GetComponent<FoodStats>();
                 if (foodStats != null)
                     Eat(foodStats.nutrition, food);
                 break;
