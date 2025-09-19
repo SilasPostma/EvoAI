@@ -90,7 +90,7 @@ public class BlobClass : MonoBehaviour
 
         float angle = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg - 90f;
         Quaternion targetRotation = Quaternion.Euler(0, 0, angle);
-        transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, stats.turnSpeed * Time.deltaTime);
+        transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, 50 * stats.turnSpeed * Time.deltaTime);
 
         transform.Translate(Vector3.up * stats.speed * Time.deltaTime);
     }

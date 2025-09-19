@@ -36,7 +36,7 @@ public class SimManager : MonoBehaviour
     void StartGeneration()
     {
         allFood = SpawnFood(foodAmount);
-        SpawnBlobs(startPopulation);
+        SpawnBlobs(startPopulation, true);
         timer = generationTimer;
     }
 
@@ -80,7 +80,7 @@ public class SimManager : MonoBehaviour
     }
 
 
-    void SpawnBlobs(int sp)
+    void SpawnBlobs(int sp, bool firstGen)
     {
         for (int i = 0; i < sp; i++)
         {
@@ -90,6 +90,12 @@ public class SimManager : MonoBehaviour
             blob_instance.name = $"Blob_{i}";
 
             BlobClass blobClass = blob_instance.GetComponent<BlobClass>();
+
+            if (firstGen)
+            {
+                blobClass.stats = blobClass.stats.Produce(50, 0.5f);
+            }
+
             if (blobClass != null)
                 blobs.Add(blobClass);
         }
