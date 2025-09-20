@@ -13,6 +13,8 @@ public class SimManager : MonoBehaviour
     public float foodSpreadRate = 0.1f;
     [SerializeField] private int foodAmount;
     public int kidCost = 5;
+    public float mutationChance = 0.2f;
+    public MutationAmounts mutationAmounts;
 
 
     [Header("Simulation Setup")]
@@ -28,6 +30,8 @@ public class SimManager : MonoBehaviour
     public List<GameObject> allFood = new List<GameObject>();
     public List<GameObject> allBlobs = new List<GameObject>();
 
+    [HideInInspector] public float simScaleMult;
+
     void Awake()
     {
         Instance = this;
@@ -36,6 +40,7 @@ public class SimManager : MonoBehaviour
     private void Start()
     {
         StartGeneration();
+        simScaleMult = Mathf.Max(1f, (width + height) / 50f);
     }
 
     void Update()
@@ -77,10 +82,10 @@ public class SimManager : MonoBehaviour
         foreach (GameObject food in allFood)
         {
             FoodStats food_stats = food.GetComponent<FoodStats>();
-            float scale = food_stats.nutrition * 0.3f;
+            float scale = food_stats.nutrition * 0.4f;
             food.transform.localScale = new Vector2(scale, scale);
         }
-        if (Random.value <= 0.001f)
+        if (Random.value <= 0.005f)
         {
             List<GameObject> foodSpawned = SpawnFood(1);
             allFood.Add(foodSpawned[0]);
@@ -105,7 +110,7 @@ public class SimManager : MonoBehaviour
 
                 // set stats from parent + mutation
                 BlobClass blobClass = blob_instance.GetComponent<BlobClass>();
-                blobClass.stats = parents[i].Produce(0.2f, 0.2f);
+                blobClass.stats = parents[i].Produce(mutationChance, mutationAmounts);
                 blobClass.stats.name = blob_instance.name;
 
                 blob_instance.transform.localScale *= blobClass.stats.size;

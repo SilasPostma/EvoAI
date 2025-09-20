@@ -15,6 +15,7 @@ public class FoodStats : MonoBehaviour
     private float spreadCooldown = 2f;
 
     private GameObject foodPrefab;
+    private float simScaleMult;
 
     private void Start()
     {
@@ -24,6 +25,8 @@ public class FoodStats : MonoBehaviour
         maxNutrition = SimManager.Instance.foodNutritionMax;
         spreadRate = SimManager.Instance.foodSpreadRate;
         foodPrefab = SimManager.Instance.foodPrefab;
+        simScaleMult = SimManager.Instance.simScaleMult;
+
     }
 
     void Update()
@@ -47,13 +50,23 @@ public class FoodStats : MonoBehaviour
         if (Time.time - lastSpreadTime < spreadCooldown)
             return;
 
-        if (Random.value <= spreadRate * 0.0008f)
+        if (Random.value <= spreadRate * 0.00015f * simScaleMult)
         {
             float angle = Random.Range(0f, Mathf.PI * 2f);
-            float distance = Random.Range(nutrition * 0.2f + 0.2f, 1f);
+            float distance = Random.Range(nutrition * 0.2f + 0.2f, simScaleMult);
             Vector2 offset = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * distance;
             Vector2 position = (Vector2)transform.position + offset;
 
+            float width = SimManager.Instance.width;
+            float height = SimManager.Instance.height;
+
+            float minX = -width;
+            float maxX = width;
+            float minY = -height;
+            float maxY = height;
+
+            position.x = Mathf.Clamp(position.x, minX, maxX);
+            position.y = Mathf.Clamp(position.y, minY, maxY);
 
             GameObject food_instance = Instantiate(
                 foodPrefab,
@@ -76,4 +89,5 @@ public class FoodStats : MonoBehaviour
         }
     }
     #endregion
+
 }

@@ -6,7 +6,7 @@ public class BlobClass : MonoBehaviour
 {
     [Header("Stats")]
     public BlobStats stats;
-    public float energy;
+    // public float energy;
 
     [Header("Wandering Settings")]
     private float noiseOffset;
@@ -14,33 +14,41 @@ public class BlobClass : MonoBehaviour
 
     [Header("Reproduction Settings")]
     private float lastReproduceTime;
-    private float reproduceCooldown = 5f;
+    private float reproduceCooldown = 2f;
+
+    private float mutationRate;
+    private float mutationAmount;
 
     private void Start()
     {
         noiseOffset = Random.value * 100f;
         stats.metabolism = stats.CalculateMetabolism();
         lastReproduceTime = Time.time;
+        mutationRate = SimManager.Instance.mutationChance;
     }
 
     private void Update()
     {
         DrainEnergy();
         CheckAlive();
+        WrapPosition();
+    }
+
+    private void FixedUpdate()
+    {
         Reproduce();
         HandleMovement();
-        WrapPosition();
     }
 
     #region Energy & Death
     private void DrainEnergy()
     {
-        energy -= Time.deltaTime * stats.metabolism;
+        stats.energy -= Time.deltaTime * stats.metabolism;
     }
 
     private void CheckAlive()
     {
-        if (energy <= 0)
+        if (stats.energy <= 0)
         {
             SimManager.Instance.allBlobs.Remove(gameObject);
             Destroy(gameObject);
@@ -110,8 +118,8 @@ public class BlobClass : MonoBehaviour
 
     private void WrapPosition()
     {
-        float width = SimManager.Instance.width;
-        float height = SimManager.Instance.height;
+        float width = SimManager.Instance.width * 1.1f;
+        float height = SimManager.Instance.height * 1.1f;
 
         Vector3 pos = transform.position;
 
@@ -128,7 +136,7 @@ public class BlobClass : MonoBehaviour
     #region Eating
     public void Eat(float nutrition, GameObject food)
     {
-        energy = Mathf.Clamp(energy + nutrition, 0f, stats.stomachSize);
+        stats.energy = Mathf.Clamp(stats.energy + nutrition, 0f, stats.stomachSize);
         Destroy(food);
         SimManager.Instance.allFood.Remove(food);
     }
@@ -140,10 +148,11 @@ public class BlobClass : MonoBehaviour
         if (Time.time - lastReproduceTime < reproduceCooldown)
             return;
 
-        float fullness = energy / stats.stomachSize;
+        float fullness = stats.energy / stats.stomachSize;
+        float rep = Mathf.Max(stats.kidCost / stats.stomachSize);
         if (fullness >= stats.repThreshhold)
         {
-            if (Random.value <= stats.repChance)
+            if (Random.value <= stats.repChance * 0.02f)
             {
                 Quaternion rotation = Quaternion.Euler(0, 0, Random.Range(0, 360));
 
@@ -155,16 +164,17 @@ public class BlobClass : MonoBehaviour
                 );
 
                 BlobClass blobClass = blob_instance.GetComponent<BlobClass>();
-                blobClass.stats = blobClass.stats.Produce(0.2f, 0.2f);
+                blobClass.stats = this.stats.Produce(SimManager.Instance.mutationChance, SimManager.Instance.mutationAmounts);
                 blobClass.stats.name = $"{stats.name}_{stats.kids}";
 
                 blob_instance.name = blobClass.stats.name;
+                blobClass.stats.energy = stats.kidCost;
 
                 blob_instance.transform.localScale *= blobClass.stats.size;
 
                 SimManager.Instance.allBlobs.Add(blob_instance);
 
-                energy -= SimManager.Instance.kidCost;
+                stats.energy -= stats.kidCost;
                 stats.kids++;
 
                 lastReproduceTime = Time.time;

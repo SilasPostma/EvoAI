@@ -127,10 +127,11 @@ MonoBehaviour:
     stomachSize: 15
     turnSpeed: 1
     metabolism: 0
-    repThreshhold: 0.5
-    repChance: 0.05
+    repThreshhold: 0.6
+    repChance: 0.3
+    kidCost: 5
     kids: 0
+    energy: 8
     heritage:
     - God
     name: 
-  energy: 5

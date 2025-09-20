@@ -274,14 +274,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2b1a60db9a178b142b8455e49b857bea, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  startPopulation: 5
-  generationTimer: 60
-  width: 16
-  height: 9
+  startPopulation: 30
+  width: 50
+  height: 50
   foodNutritionMax: 3
   foodGrowthRate: 0.2
-  foodSpreadRate: 0.5
-  foodAmount: 30
+  foodSpreadRate: 0.3
+  foodAmount: 100
   kidCost: 5
   foodPrefab: {fileID: 8282055006557760791, guid: 077f0320eb1ff1147b7bef0dab02bc6c, type: 3}
   foodFolder: {fileID: 22224110}
@@ -289,7 +288,7 @@ MonoBehaviour:
   blobFolder: {fileID: 1240448755}
   allFood: []
   allBlobs: []
-  timer: 0
+  simScaleMult: 0
 --- !u!4 &528241564
 Transform:
   m_ObjectHideFlags: 0
