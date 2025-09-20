@@ -5,12 +5,18 @@ using System.Collections.Generic;
 [System.Serializable]
 public class BlobStats
 {
+    [Header("Stats")]
     public float speed;
     public float senseRadius;
     public float size;
     public float stomachSize;
     public float turnSpeed;
     public float metabolism;
+    public float repThreshhold;
+    public float repChance;
+    public int kids = 0;
+
+    [Header("Family")]
     public List<string> heritage = new List<string> { "God" };
     public string name;
 
@@ -23,6 +29,9 @@ public class BlobStats
         child.stomachSize = MutateValue(stomachSize, mutationRate, mutationAmount);
         child.turnSpeed = MutateValue(turnSpeed, mutationRate, mutationAmount);
         child.metabolism = CalculateMetabolism();
+        child.repThreshhold = MutateValue(repThreshhold, mutationRate, mutationAmount);
+        child.repChance = MutateValue(repChance, mutationRate, mutationAmount);
+        child.kids = 0;
         child.heritage = new List<string>(heritage);
         child.heritage.Add(name);
         return child;

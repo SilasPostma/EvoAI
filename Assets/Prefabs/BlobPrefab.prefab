@@ -124,10 +124,13 @@ MonoBehaviour:
     speed: 1.5
     senseRadius: 2
     size: 1
-    stomachSize: 20
+    stomachSize: 15
     turnSpeed: 1
     metabolism: 0
+    repThreshhold: 0.5
+    repChance: 0.05
+    kids: 0
     heritage:
     - God
     name: 
-  energy: 10
+  energy: 5

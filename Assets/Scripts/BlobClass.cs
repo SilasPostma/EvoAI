@@ -12,16 +12,22 @@ public class BlobClass : MonoBehaviour
     private float noiseOffset;
     private float noiseScale = 0.5f;
 
+    [Header("Reproduction Settings")]
+    private float lastReproduceTime;
+    private float reproduceCooldown = 5f;
+
     private void Start()
     {
         noiseOffset = Random.value * 100f;
         stats.metabolism = stats.CalculateMetabolism();
+        lastReproduceTime = Time.time;
     }
 
     private void Update()
     {
         DrainEnergy();
         CheckAlive();
+        Reproduce();
         HandleMovement();
         WrapPosition();
     }
@@ -120,16 +126,50 @@ public class BlobClass : MonoBehaviour
     #endregion
 
     #region Eating
-    private void CheckFoodNearby()
-    {
-        // Already handled in FindClosestFood and MoveToward
-    }
-
     public void Eat(float nutrition, GameObject food)
     {
         energy = Mathf.Clamp(energy + nutrition, 0f, stats.stomachSize);
         Destroy(food);
         SimManager.Instance.allFood.Remove(food);
+    }
+    #endregion
+
+    #region Reproducing
+    public void Reproduce()
+    {
+        if (Time.time - lastReproduceTime < reproduceCooldown)
+            return;
+
+        float fullness = energy / stats.stomachSize;
+        if (fullness >= stats.repThreshhold)
+        {
+            if (Random.value <= stats.repChance)
+            {
+                Quaternion rotation = Quaternion.Euler(0, 0, Random.Range(0, 360));
+
+                GameObject blob_instance = Instantiate(
+                    SimManager.Instance.blobPrefab,
+                    transform.position,
+                    rotation,
+                    SimManager.Instance.blobFolder
+                );
+
+                BlobClass blobClass = blob_instance.GetComponent<BlobClass>();
+                blobClass.stats = blobClass.stats.Produce(0.2f, 0.2f);
+                blobClass.stats.name = $"{stats.name}_{stats.kids}";
+
+                blob_instance.name = blobClass.stats.name;
+
+                blob_instance.transform.localScale *= blobClass.stats.size;
+
+                SimManager.Instance.allBlobs.Add(blob_instance);
+
+                energy -= SimManager.Instance.kidCost;
+                stats.kids++;
+
+                lastReproduceTime = Time.time;
+            }
+        }
     }
     #endregion
 }

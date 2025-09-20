@@ -4,24 +4,29 @@ using UnityEngine;
 
 public class SimManager : MonoBehaviour
 {
+    [Header("Simulation Settings")]
     public int startPopulation;
-    public float generationTimer = 30f;
     public float width;
     public float height;
     public float foodNutritionMax;
+    public float foodGrowthRate = 0.1f;
+    public float foodSpreadRate = 0.1f;
+    [SerializeField] private int foodAmount;
+    public int kidCost = 5;
+
+
+    [Header("Simulation Setup")]
     public GameObject foodPrefab;
     public Transform foodFolder;
     public GameObject blobPrefab;
     public Transform blobFolder;
     public static SimManager Instance;
 
-    [SerializeField] private int foodAmount;
-    public int kidCost = 5;
+
+    [Header("Simulation Info")]
 
     public List<GameObject> allFood = new List<GameObject>();
     public List<GameObject> allBlobs = new List<GameObject>();
-
-    private float timer;
 
     void Awake()
     {
@@ -35,11 +40,7 @@ public class SimManager : MonoBehaviour
 
     void Update()
     {
-        timer -= Time.deltaTime;
-        if (timer <= 0 || allFood.Count == 0)
-        {
-            EndGeneration();
-        }
+        GrowFood();
     }
 
     void StartGeneration()
@@ -47,17 +48,8 @@ public class SimManager : MonoBehaviour
         ClearAll();
         allFood = SpawnFood(foodAmount);
         allBlobs = SpawnBlobs(startPopulation);
-        timer = generationTimer;
     }
 
-    void EndGeneration()
-    {
-        List<BlobStats> survivorStats = CollectSurvivorStats();
-        ClearAll();
-        allFood = SpawnFood(foodAmount);
-        allBlobs = SpawnBlobs(startPopulation, survivorStats);
-        timer = generationTimer;
-    }
 
     List<GameObject> SpawnFood(int amount)
     {
@@ -67,18 +59,32 @@ public class SimManager : MonoBehaviour
             float randX = Random.Range(-width, width);
             float randY = Random.Range(-height, height);
             GameObject food_instance = Instantiate(foodPrefab, new Vector2(randX, randY), Quaternion.identity, foodFolder);
-            food_instance.name = $"Food_{i}";
+            food_instance.name = $"Food";
 
-            FoodStats stats = food_instance.GetComponent<FoodStats>();
-            if (stats != null)
+            FoodStats food_stats = food_instance.GetComponent<FoodStats>();
+            if (food_stats != null)
             {
-                stats.nutrition = Random.Range(1f, foodNutritionMax);
-                food_instance.transform.localScale *= stats.nutrition;
+                food_stats.nutrition = Random.Range(0.3f, 0.6f);
             }
 
             foods.Add(food_instance);
         }
         return foods;
+    }
+
+    void GrowFood()
+    {
+        foreach (GameObject food in allFood)
+        {
+            FoodStats food_stats = food.GetComponent<FoodStats>();
+            float scale = food_stats.nutrition * 0.3f;
+            food.transform.localScale = new Vector2(scale, scale);
+        }
+        if (Random.value <= 0.001f)
+        {
+            List<GameObject> foodSpawned = SpawnFood(1);
+            allFood.Add(foodSpawned[0]);
+        }
     }
 
     List<GameObject> SpawnBlobs(int count, List<BlobStats> parents = null)
@@ -130,26 +136,6 @@ public class SimManager : MonoBehaviour
         }
 
         return blobs;
-    }
-
-    List<BlobStats> CollectSurvivorStats()
-    {
-        List<BlobStats> survivorsStats = new List<BlobStats>();
-
-        foreach (GameObject blob in allBlobs)
-        {
-            BlobClass blobClass = blob.GetComponent<BlobClass>();
-            if (blobClass == null) continue;
-
-            int kidsCount = Mathf.FloorToInt(blobClass.energy / kidCost);
-
-            for (int k = 0; k < kidsCount; k++)
-            {
-                survivorsStats.Add(blobClass.stats);
-            }
-        }
-
-        return survivorsStats;
     }
 
     void ClearAll()

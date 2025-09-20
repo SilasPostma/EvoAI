@@ -133,4 +133,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 98926d9a4fc278b43a646ceff782bff8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  nutrition: 1
+  nutrition: 0.4
